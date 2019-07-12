@@ -1,3 +1,5 @@
+import logging
+
 '''
 用户配置
 '''
@@ -13,3 +15,6 @@ db={
 
     # 'database': 'sqlite.db',      #数据库为sqlite时才需要指定
 }
+
+logging.basicConfig( level=logging.INFO )
+# logging.basicConfig( level=logging.WARNING )

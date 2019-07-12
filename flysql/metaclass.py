@@ -2,12 +2,12 @@ from flysql.field import Field
 
 class ModelMetaclass(type):#元类创建的类的子类会再次调用
     def __new__(cls,name,bases,attrs):
-        if(name == 'Model' or name == 'BaseModel'):
+        if name == 'Model' or name == 'BaseModel':
             return type.__new__(cls,name,bases,attrs)
         table = name
         mappings = dict()
         for k,v in attrs.items():
-            if ( isinstance(v,Field) ):
+            if isinstance(v,Field):
                 mappings[k] = v
             elif k == '__table__':
                 table = v;
