@@ -1,4 +1,4 @@
-from flysql.metaclass import ModelMetaclass
+from flysql.base.metaclass import ModelMetaclass
 from flysql.create import sqlconfig
 
 
@@ -16,4 +16,3 @@ class BaseModel(dict,metaclass=ModelMetaclass):
 
 #定义类变量，设置生成sql语句的工具类
 BaseModel.operation = sqlconfig.operation
-

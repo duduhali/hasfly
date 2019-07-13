@@ -1,4 +1,4 @@
-from flysql.field import DatetimeField
+from flysql.base.field import DatetimeField
 import datetime
 
 '''获取自身的查询条件(where后面的条件), 有主键时返回所有主键，没主键时返回所有字段'''
@@ -186,10 +186,10 @@ class BaseOpertion(object):
         return get_find_sql(bm)
 
     @classmethod
-    def sum(cls, bm, cols):
+    def sum(cls, bm, cols, f='sum'): #max min avg 公用此操作
         mappings = bm.__mappings__
         cols = mappings.get(cols.strip(), None).name
-        bm._select = 'sum(%s)' % cols
+        bm._select = '%s(%s)' %(f, cols)
         return get_find_sql(bm)
 
     @classmethod

@@ -1,12 +1,20 @@
-from test import User
+import pymysql
+from contextlib import contextmanager
 
-# u = User(name='dudu',data='2019-07-01 22:10',age=22)#参数的顺序可以任意
-# print(u)
 
-k = {'id': 4, 'age': 22, 'name': 'dudu', 'data': '2019-07-01 22:10', 'updatetime': '2019-07-01 22:10'}
-# u2 = u.__class__(**k)
-# print(u2)
+@contextmanager
+def useConnect():
+    print('初始化连接')
+    conn = pymysql.connect("localhost", "root", "", "hasfly", charset='utf8')
+    try:
+        yield conn
+    except Exception as e:
+        print( e.__str__() )
+    finally:
+        print('关闭连接')
+        conn.close()
 
-u3 = User(**k)
-print(u3)
-print(type(User),type(u3))
+with useConnect() as conn:
+    print(conn.open)
+
+print('ok')#这里正常运行

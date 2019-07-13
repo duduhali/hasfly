@@ -1,6 +1,7 @@
 from flysql.config import base_mysql,base_sqlite
 from flysql.config_loacl import db
 from flysql.operation import MysqlOpertion,SqliteOpertion
+from flysql.config_loacl import logging
 
 #用模块实现单例模式
 class __SQLconfig(object):
