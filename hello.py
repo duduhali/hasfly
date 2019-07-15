@@ -1,20 +1,33 @@
-import pymysql
-from contextlib import contextmanager
+# <p>Welcome, {{user_name}}!</p>
+# <p>Products:</p>
+# <ul>
+# {% for product in product_list %}
+#     <li>{{ product.name }}:
+#         {{ product.price|format_price }}</li>
+# {% endfor %}
+# </ul>
+def render_function(context, do_dots):
+    c_user_name = context['user_name']
+    c_product_list = context['product_list']
+    c_format_price = context['format_price']
 
+    result = []
+    append_result = result.append
+    extend_result = result.extend
+    to_str = str
 
-@contextmanager
-def useConnect():
-    print('初始化连接')
-    conn = pymysql.connect("localhost", "root", "", "hasfly", charset='utf8')
-    try:
-        yield conn
-    except Exception as e:
-        print( e.__str__() )
-    finally:
-        print('关闭连接')
-        conn.close()
-
-with useConnect() as conn:
-    print(conn.open)
-
-print('ok')#这里正常运行
+    extend_result([
+        '<p>Welcome, ',
+        to_str(c_user_name),
+        '!</p>\n<p>Products:</p>\n<ul>\n'
+    ])
+    for c_product in c_product_list:
+        extend_result([
+            '\n    <li>',
+            to_str(do_dots(c_product, 'name')),
+            ':\n        ',
+            to_str(c_format_price(do_dots(c_product, 'price'))),
+            '</li>\n'
+        ])
+    append_result('\n</ul>\n')
+    return ''.join(result)

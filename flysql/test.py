@@ -24,9 +24,9 @@ class User(Model):
 # u.delete()
 
 
-# result = User.find().where(['>','age',20]).all()
-# for one in result:
-#     print(one)
+result = User.find().all()
+for one in result:
+    print(one)
 
 # result = User.find().where('or',name='yang',age=[22]).order('age').one()
 # print(result)
