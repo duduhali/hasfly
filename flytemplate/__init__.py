@@ -209,7 +209,7 @@ class Templite(object):
             code = self._expr_code(pipes[0])
             for func in pipes[1:]:
                 # 管道的剩余部分都是过滤器，我们将过滤器函数更新进all_vars
-                self._variable(func, self.all_vars)
+                self._variable(func, self.all_vars)#判断函数名是否合法并加入集合
                 code = "c_%s(%s)" % (func, code)
         # 接下来处理过滤器中的点操作，因为有了do_dots这个函数的帮助（在渲染阶段实现，之后会具体讲），只要将诸如a.b.c.d形式的表达式转换成do_dots(a, 'b', 'c', 'd')就可以了
         elif "." in expr:
