@@ -1,33 +1,32 @@
-# <p>Welcome, {{user_name}}!</p>
-# <p>Products:</p>
-# <ul>
-# {% for product in product_list %}
-#     <li>{{ product.name }}:
-#         {{ product.price|format_price }}</li>
-# {% endfor %}
-# </ul>
-def render_function(context, do_dots):
-    c_user_name = context['user_name']
-    c_product_list = context['product_list']
-    c_format_price = context['format_price']
+from werkzeug.serving import run_simple
+from werkzeug.wrappers import Response
 
-    result = []
-    append_result = result.append
-    extend_result = result.extend
-    to_str = str
+class FLYWEB:
 
-    extend_result([
-        '<p>Welcome, ',
-        to_str(c_user_name),
-        '!</p>\n<p>Products:</p>\n<ul>\n'
-    ])
-    for c_product in c_product_list:
-        extend_result([
-            '\n    <li>',
-            to_str(do_dots(c_product, 'name')),
-            ':\n        ',
-            to_str(c_format_price(do_dots(c_product, 'price'))),
-            '</li>\n'
-        ])
-    append_result('\n</ul>\n')
-    return ''.join(result)
+    # 实例化方法
+    def __init__(self, static_folder='static',template_folder='template', session_path=".session"):
+        self.host = '127.0.0.1'  # 默认主机
+        self.port = 8080  # 默认端口
+        self.url_map = {}  # 存放 URL 与 Endpoint(节点名) 的映射
+        self.static_map = {}  # 存放 URL 与 静态资源的映射
+        self.function_map = {}  # 存放 Endpoint 与请求处理函数的映射
+
+    def dispatch_request(self, request):
+        # 定义 200 状态码表示成功
+        # 返回响应体
+        return Response('hello')
+
+    # 启动入口
+    def run(self, host=None, port=None, **options):
+        # 如果 host 不为 None，替换 self.host
+        if host:
+            self.host = host
+        # 如果 port 不为 None，替换 self.port
+        if port:
+            self.port = port
+        # 把框架本身也就是应用本身和其它几个配置参数传给 werkzeug 的 run_simple
+        run_simple(hostname=self.host, port=self.port, application=self, **options)
+
+    # 框架被 WSGI 调用入口的方法
+    def __call__(self, environ, start_response):
+        return wsgi_app(self, environ, start_response)
