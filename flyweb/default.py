@@ -1,5 +1,11 @@
 from flyweb import Response
 
+templite_path = 'view/'
+templite_extensions = 'html'
+
+session_id = 'session_id'
+
+
 def defaultIndex(request):
     return Response('默认首页！')
 
