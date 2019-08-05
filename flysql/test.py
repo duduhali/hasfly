@@ -1,4 +1,8 @@
-from flysql import Model,IntegerField,StringField,DatetimeField
+from flysql import IntegerField,StringField,DatetimeField
+
+from flysql.model import Model
+
+
 
 class User(Model):
     '''

@@ -1,5 +1,7 @@
 import werkzeug.wrappers as wrappers
 
+
+
 header_server = 'Hasfly Web 0.1'
 #定制的Response
 def Response(data,status=200,content_type='text/html',headers = {'Server': header_server}):
@@ -11,4 +13,4 @@ def Header(data):
     headers.update(data)
     return headers
 
-
+from flyweb.default import *

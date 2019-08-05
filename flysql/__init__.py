@@ -1,129 +1,55 @@
-from flysql.base.field import Field,IntegerField,StringField,DatetimeField
-from flysql.base import BaseModel
-from flysql.config import base_mysql,base_sqlite
-from flysql.config_loacl import logging
-from flysql.operation.result import executeSQL,queryData,queryNumber
+from flysql.loacl_config import logging
 
+class Field(object):
+    #默认，False:可为空,False:不是主键，False:不自动增长(自动增长仅int型可以)
+    def __init__(self,name,column_type,not_null,primary_key,auto_increment):
+        self.name = name
+        self.column_type = column_type
+        self.not_null = not_null
+        self.primary_key = primary_key
+        self.auto_increment = auto_increment
+    def __str__(self):
+        return '<%s:%s>'%(self.__class__.__name__,self.name)
 
-class Model(BaseModel):
-    @classmethod
-    def createTable(cls):  # 创建表
-        sql_cmd = cls.operation.createTable(cls)  #生成sql语句
-        logging.info('创建表=>%s' % sql_cmd)
-        return executeSQL(sql_cmd)
+class IntegerField(Field):
+    def __init__(self,name,not_null=False,primary_key=False,auto_increment=False):
+        super(IntegerField,self).__init__(name,'int',not_null,primary_key,auto_increment)
 
-    def save(self):
-        sql_cmd = self.operation.save(self)  # 生成sql语句
-        logging.info('插入   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
+class StringField(Field):
+    def __init__(self,name,lenght=100,not_null=False,primary_key=False,auto_increment=False):
+        super(StringField,self).__init__(name,'varchar(%d)'%lenght,not_null,primary_key,auto_increment)
 
-    def update(self):
-        if self.__exist__ == False:
-            return self.save()   #不是从表中取出的数据, 更新时返回保存的sql名
-        sql_cmd = self.operation.update(self)  # 生成sql语句
-        logging.info('更新   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
+class DatetimeField(Field):
+    def __init__(self,name,not_null=False,primary_key=False,auto_increment=False):
+        super(DatetimeField,self).__init__(name,'datetime',not_null,primary_key,auto_increment)
 
-    def delete(self):
-        if self.__exist__ == False:
-            logging.warning('删除失败,__exist__ = False')
-            return False   #不是从表中取出的数据, 直接返回False
-        sql_cmd = self.operation.delete(self)  # 生成sql语句
-        logging.info('删除   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
+#元类创建的类的子类会再次调用
+class ModelMetaclass(type):
+    def __new__(cls,name,bases,attrs):
+        if name == 'Model' or name == 'BaseModel':
+            return type.__new__(cls,name,bases,attrs)
+        table = name
+        mappings = dict()
+        for k,v in attrs.items():
+            if isinstance(v,Field):
+                mappings[k] = v
+            elif k == '__table__':
+                table = v;
+        for k in mappings.keys():
+            attrs.pop(k)
+        #把属性从类中删除，放到mppings中
+        attrs['__mappings__'] = mappings
+        attrs['__table__'] = table
+        return type.__new__(cls,name,bases,attrs)
 
-    @classmethod
-    def find(cls):
-        cls.operation.find(cls)
-        return cls
-
-    @classmethod
-    def distinct(cls):
-        cls.operation.distinct(cls)
-        return cls
-
-    # @classmethod       此方法有问题
-    # def select(cls, cols):
-    #     cls.operation.select(cls,cols)
-    #     return cls
-
-    @classmethod
-    def where(cls, *args, **kwargs):
-        cls.operation.where(cls, *args, **kwargs)
-        return cls
-
-    @classmethod
-    def order(cls, *args, **kwargs):
-        cls.operation.order(cls, *args, **kwargs)
-        return cls
-
-    @classmethod
-    def limit(cls, offset=0, rows=None):
-        cls.operation.limit(cls, offset, rows)
-        return cls
-
-    @classmethod
-    def all(cls):
-        sql_cmd = cls.operation.all(cls)  # 生成sql语句
-        logging.info('数据(all)   %s' % sql_cmd)
-        return queryData(sql_cmd,cls)
-
-    @classmethod
-    def one(cls):
-        sql_cmd = cls.operation.one(cls)  # 生成sql语句
-        logging.info('数据(one)   %s' % sql_cmd)
-        data = queryData(sql_cmd, cls)
-        return data[0]  if data!=None and len(data)>0 else None   #查询结果为零时返回None
-
-    @classmethod
-    def count(cls, cols='*'):  # 参数可以是"*"或者是一个字段
-        sql_cmd = cls.operation.count(cls,cols)  # 生成sql语句
-        logging.info('数量   %s' % sql_cmd)
-        return queryNumber(sql_cmd)
-
-    @classmethod
-    def sum(cls, cols):  # 参数不能是'*'且只能传入一个字段返回行数 类似的还有 max min avg
-        sql_cmd = cls.operation.sum(cls, cols)  # 生成sql语句
-        logging.info('总和   %s' % sql_cmd)
-        return queryNumber(sql_cmd)
-    @classmethod
-    def max(cls, cols):  # 参数不能是'*'且只能传入一个字段返回行数
-        sql_cmd = cls.operation.sum(cls, cols, 'max')  # 生成sql语句
-        logging.info('总和   %s' % sql_cmd)
-        return queryNumber(sql_cmd)
-
-    @classmethod
-    def min(cls, cols):  # 参数不能是'*'且只能传入一个字段返回行数
-        sql_cmd = cls.operation.sum(cls, cols, 'min')  # 生成sql语句
-        logging.info('总和   %s' % sql_cmd)
-        return queryNumber(sql_cmd)
-
-    @classmethod
-    def avg(cls, cols):  # 参数不能是'*'且只能传入一个字段返回行数
-        sql_cmd = cls.operation.sum(cls, cols, 'avg')  # 生成sql语句
-        logging.info('总和   %s' % sql_cmd)
-        return queryNumber(sql_cmd)
-
-    @classmethod
-    def updateAll(cls, mappings, *args, **kwargs):
-        sql_cmd = cls.operation.updateAll(cls, mappings, *args, **kwargs)  # 生成sql语句
-        logging.info('updateAll   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
-
-    @classmethod
-    def updateOne(cls, mappings, *args, **kwargs):
-        sql_cmd = cls.operation.updateOne(cls, mappings, *args, **kwargs)  # 生成sql语句
-        logging.info('updateOne   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
-
-    @classmethod
-    def deleteAll(cls, *args, **kwargs):  # condition为None时删除所有
-        sql_cmd = cls.operation.deleteAll(cls, *args, **kwargs)  # 生成sql语句
-        logging.info('deleteAll   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
-
-    @classmethod
-    def deleteOne(cls, *args, **kwargs):
-        sql_cmd = cls.operation.deleteOne(cls, *args, **kwargs)  # 生成sql语句
-        logging.info('deleteOne   %s' % sql_cmd)
-        return executeSQL(sql_cmd)
+class BaseModel(dict,metaclass=ModelMetaclass):
+    def __init__(self,**kwargs):
+        self.__exist__ = False
+        super(BaseModel,self).__init__(**kwargs)
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError(r"'Model' object has no attribute '%s'"%item)
+    def __setattr__(self, key, value):
+        self[key] = value

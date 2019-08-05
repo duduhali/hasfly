@@ -1,5 +1,5 @@
-from flysql.create import OperationDb
-from flysql.config_loacl import logging
+from flysql.create_db import OperationDb
+from flysql.loacl_config import logging
 import datetime
 from contextlib import contextmanager
 

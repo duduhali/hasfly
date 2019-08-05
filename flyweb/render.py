@@ -2,7 +2,7 @@ import json
 import os
 from flyweb import Response,Header
 from flytemplate import Templite
-from flyweb.default import templite_extensions,templite_path
+from flyweb.local_config import templite_extensions,templite_path
 
 # 定义文件类型
 TYPE_MAP = {

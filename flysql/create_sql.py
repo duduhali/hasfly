@@ -1,4 +1,4 @@
-from flysql.base.field import DatetimeField
+from flysql import DatetimeField
 import datetime
 
 '''获取自身的查询条件(where后面的条件), 有主键时返回所有主键，没主键时返回所有字段'''

@@ -1,81 +1,110 @@
-from flyweb.default import defaultIndex,default404,defaultMethodErr,default401
 from flyweb.render import dispatch_static
 
+def getBasePath(path):
+    return path.strip().strip('/')
 
-#转换路径，'/'=>'/'; '/xxxx'=>'/xxxx/'; '/xxxx/'=>'/xxxx/'
-def getPath(path):
-    tag_path = '/'+path.lstrip('/')
-    tag_path = tag_path.rstrip('/')+'/'
-    return tag_path
-
-
+#用字符串储路由信息
 class BaseRoute(object):
-    def __init__(self):
-        self.urlMap = {'/': [defaultIndex, {}]}
-        self.defaultURL = {'404': default404, '401': default401}
-        self.staticDir = []
+    def __init__(self, mainURL,defaultURL,staticDir):
+        self.mainURL = mainURL
+        self.defaultURL = defaultURL
+        self.staticDir = staticDir
 
-    #添加路由对应的处理函数
-    def addRoute(self,path, method, func):
-        pass
+    # 添加路由对应的处理函数
+    def addRoute(self, path, method, func):
+        self.mainURL[getBasePath(path)] = [func, method]
 
     # 批量添加带前缀的路由函数
-    def addPrefixRoute(self,url_prefix,arr):
-        pass
+    def addPrefixRoute(self, url_prefix, arr):
+        prefix = getBasePath(url_prefix) # 前缀
+        for path, method, func in arr:
+            self.mainURL[ '%s/%s' % (prefix, getBasePath(path)) ] = [func, method]
 
     # 添加响应编码对应的处理函数
-    def addDeaultRoute(self,code, func):
-        pass
+    def addDefaultRoute(self, code, func):
+        self.defaultURL[repr(code)] = func
 
     # 添加静态资源目录
     def addStatic(self, path):
-        pass
+        self.staticDir.append(getBasePath(path))
 
-    #根据请求的路径和方法获取处理函数
-    def getResponse(self,request):
-        pass
-
-class StrRoute(BaseRoute):
-    def addRoute(self,path, method, func):
-        self.urlMap[getPath(path.strip(' '))] = [func, method]
-
-    def addPrefixRoute(self,url_prefix,arr):
-        prefix = url_prefix.strip(' ').strip('/')  # 前缀
-        for path,method,func in arr:
-            path_list = path.strip(' ').strip('/').split('/')
-            tag_path = '%s/%s'%(prefix,'/'.join(path_list))
-            self.urlMap[getPath(tag_path)] = [func, method]
-
-    def addDeaultRoute(self,code, func):
-        self.defaultURL[repr(code)] = func
-
-    def addStatic(self, path):
-        self.staticDir.append('/' + path.strip(' ').strip('/'))
-
+    # 根据请求的路径和方法获取处理函数
     def getResponse(self, request):
-        #先考虑是静态资源的情况
-        url_path = request.path
-        if len(self.staticDir) != 0:
+        url_path = getBasePath(request.path)
+
+        if len(self.staticDir) != 0: # 先考虑是静态资源的情况
             for onePath in self.staticDir:
                 # 根据开头的字母，判断是不是请求的静态资源
                 if url_path.startswith(onePath):
                     return dispatch_static(url_path)
 
         method = request.method
-        client_path = getPath(request.path)
         try:
-            path = self.urlMap.get(client_path, None)
-            if path != None:
-                path = self.urlMap[client_path]
-                methods = path[1]
-                if len(methods) == 0 or method in methods:
-                    return path[0](request)
-                return defaultMethodErr(request) #路径正确，method有错
-            else:
-                print("self.defaultURL['404']",client_path)
-                return self.defaultURL['404'](request)
-        except Exception as e:
-            print(__name__,'e.__str__():',e.__str__())
-        return self.defaultURL['401'](request)
+            url_list = url_path.split('/')
+            url_list_lenght = len(url_list)
+            for one in self.mainURL.keys():
+                one_list = one.split('/')
+                i = 0
+                parm_dict = dict()
+                tag_url_list = []
+                while len(one_list)>i and i<url_list_lenght:
+                    item = one_list[i]
+                    tag_url_list.append(item)
+                    if item != url_list[i]:
+                        if item.startswith('<') and item.endswith('>'):
+                            name_and_type = item[1:-1].split(':')
+                            if len(name_and_type)==1:
+                                parm_dict[name_and_type[0]] = url_list[i]
+                            else:
+                                the_type = name_and_type[1]
+                                the_data = url_list[i]
+                                if the_type == 'int':
+                                    the_data = int(the_data)
+                                elif the_type == 'float':
+                                    the_data = float(the_data)
+                                parm_dict[name_and_type[0]] = the_data
+                        else:
+                            break
+                    i = i+1
+                if i==url_list_lenght:
+                    tag_fun,methods = self.mainURL.get('/'.join(tag_url_list))
+                    if len(methods) == 0 or method in methods:
+                        if len(parm_dict)>0:
+                            return tag_fun(request,**parm_dict)
+                        else:
+                            return tag_fun(request) #路径中不包含参数
+                    return self.defaultURL['40x'](request)  # 路径正确，method有错
 
+            return self.defaultURL['404'](request)
+
+            #直接比较字符串，无法处理包含参数的路径，如：hi/<username>
+            # tag_data = self.mainURL.get(url_path, None)
+            # if tag_data != None:
+            #     tag_fun, methods = tag_data
+            #     if len(methods) == 0 or method in methods:
+            #         return tag_fun(request)
+            #     return self.defaultURL['40x'](request)  # 路径正确，method有错
+            # else:
+            #     return self.defaultURL['404'](request)
+        except Exception as e:
+            print(__name__, 'e.__str__():', e.__str__())
+        return self.defaultURL['500'](request)
+
+#用树状结构存储路由信息
+class TreeRoute(BaseRoute):
+    # 添加路由对应的处理函数
+    def addRoute(self, path, method, func):
+        pass
+
+    # 批量添加带前缀的路由函数
+    def addPrefixRoute(self, url_prefix, arr):
+        pass
+
+    # 添加静态资源目录
+    def addStatic(self, path):
+        pass
+
+    # 根据请求的路径和方法获取处理函数
+    def getResponse(self, request):
+        pass
 

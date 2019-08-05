@@ -1,9 +1,9 @@
 from flyweb.web import Hasfly
 from flyweb.render import *
-# from admin import admin
+from admin import admin
 
 app = Hasfly(__name__)
-# app.register_blueprint(admin)
+app.register_blueprint(admin)
 
 @app.route('/',method={'GET','POST'})
 def index(request):
@@ -12,12 +12,17 @@ def index(request):
     # print(request.remote_addr)
     return Response('首页 Hi')
 
-@app.route('/hi/<username>')
-def hi(request):
-    return 'Hi'
+@app.route('/user/<id:float>')
+def hi(request,id):
+    print(type(id),id)
+    return id
+@app.route('/name/<name>')
+def hi(request,name):
+    print(type(name),name)
+    return name
 
 @app.route('temp')
-def hi(request):
+def temp(request):
     products = [{'name': '123', 'price': 1}, {'name': 'abc', 'price': 1.25}]
     return render_template('temp',
                            product_list=products,

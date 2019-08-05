@@ -1,6 +1,4 @@
 
-arr = []
-arr.append([1,2,3])
-for x,y,z in arr:
-    print(x,y,z)
-
+print(type(12))
+print(type('12'))
+print(type(12.333333333333333333333333333333333))

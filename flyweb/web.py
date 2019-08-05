@@ -1,9 +1,8 @@
 from werkzeug.serving import run_simple
 import werkzeug.wrappers as wrappers
-from flyweb.route import StrRoute
-from flyweb import Response
-from flyweb.tool import create_session_id
-from flyweb.default import session_id
+from flyweb.default import baseRoute
+from flyweb.tool import check_response
+
 
 class Flyweb(object):
     def __init__(self, baseRoute, config={}):
@@ -12,14 +11,7 @@ class Flyweb(object):
 
     def dispatch_request(self,request):
         response = self.baseRoute.getResponse(request)
-
-        if isinstance(response, wrappers.Response)==False:#返回的response 可能是字符串
-            response = Response(response)
-
-        # 处理cookie，如果键不在 cookies 中，则通知客户端设置 Cookie
-        if session_id not in request.cookies:
-            response.set_cookie(session_id, create_session_id())
-        return response
+        return check_response(response,request)
 
     def wsgi_app(self, environ, start_response):
         request = wrappers.Request(environ)
@@ -43,7 +35,7 @@ class Blueprint:
 class Hasfly:
     def __init__(self, name):
         # print('__name__',name)
-        self.baseRoute = StrRoute()
+        self.baseRoute = baseRoute
 
     #路由装饰器
     def route(self,path,method={}):
@@ -59,7 +51,7 @@ class Hasfly:
     def errorhandler(self,code):
         def decorator(func):
             # 添加响应编码对应的处理函数
-            self.baseRoute.addDeaultRoute(code, func)
+            self.baseRoute.addDefaultRoute(code, func)
         return decorator
 
     # 批量添加带前缀的路由函数
@@ -88,7 +80,9 @@ class Hasfly:
             passthrough_errors=False,
             ssl_context=None,
             ):
-        print(self.baseRoute.urlMap)
+        print(self.baseRoute.mainURL)
+        print(self.baseRoute.defaultURL)
+        print(self.baseRoute.staticDir)
 
         app = Flyweb(self.baseRoute)
         run_simple(hostname, port, app, use_reloader,use_debugger,
