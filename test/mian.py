@@ -14,11 +14,11 @@ def index(request):
 
 @app.route('/user/<id:float>')
 def hi(request,id):
-    print(type(id),id)
+    # print(type(id),id)
     return id
-@app.route('/name/<name>')
+@app.route('/name/<name>')#默认是str类型
 def hi(request,name):
-    print(type(name),name)
+    # print(type(name),name)
     return name
 
 @app.route('temp')

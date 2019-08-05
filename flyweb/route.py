@@ -1,4 +1,5 @@
 from flyweb.render import dispatch_static
+from flyweb.local_config import url_suffix
 
 def getBasePath(path):
     return path.strip().strip('/')
@@ -18,7 +19,7 @@ class BaseRoute(object):
     def addPrefixRoute(self, url_prefix, arr):
         prefix = getBasePath(url_prefix) # 前缀
         for path, method, func in arr:
-            self.mainURL[ '%s/%s' % (prefix, getBasePath(path)) ] = [func, method]
+            self.addRoute('%s/%s' % (prefix, getBasePath(path)), method, func)
 
     # 添加响应编码对应的处理函数
     def addDefaultRoute(self, code, func):
@@ -31,13 +32,7 @@ class BaseRoute(object):
     # 根据请求的路径和方法获取处理函数
     def getResponse(self, request):
         url_path = getBasePath(request.path)
-
-        if len(self.staticDir) != 0: # 先考虑是静态资源的情况
-            for onePath in self.staticDir:
-                # 根据开头的字母，判断是不是请求的静态资源
-                if url_path.startswith(onePath):
-                    return dispatch_static(url_path)
-
+        url_path = url_path.strip(url_suffix) #去掉路由的扩展名，如 /user/2.html=>/user/2
         method = request.method
         try:
             url_list = url_path.split('/')
@@ -75,8 +70,6 @@ class BaseRoute(object):
                             return tag_fun(request) #路径中不包含参数
                     return self.defaultURL['40x'](request)  # 路径正确，method有错
 
-            return self.defaultURL['404'](request)
-
             #直接比较字符串，无法处理包含参数的路径，如：hi/<username>
             # tag_data = self.mainURL.get(url_path, None)
             # if tag_data != None:
@@ -86,10 +79,16 @@ class BaseRoute(object):
             #     return self.defaultURL['40x'](request)  # 路径正确，method有错
             # else:
             #     return self.defaultURL['404'](request)
+
+            if len(self.staticDir) != 0:  # 最后考虑是静态资源的情况
+                for onePath in self.staticDir:
+                    # 根据开头的字母，判断是不是请求的静态资源
+                    if url_path.startswith(onePath):
+                        return dispatch_static(url_path)
         except Exception as e:
             print(__name__, 'e.__str__():', e.__str__())
-        return self.defaultURL['500'](request)
-
+            return self.defaultURL['500'](request)
+        return self.defaultURL['404'](request)
 #用树状结构存储路由信息
 class TreeRoute(BaseRoute):
     # 添加路由对应的处理函数

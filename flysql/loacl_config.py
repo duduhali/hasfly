@@ -17,5 +17,5 @@ db={
     # 'database': 'sqlite.db',      #数据库为sqlite时才需要指定
 }
 
-logging.basicConfig( level=logging.INFO )
+logging.basicConfig( level=logging.ERROR )
 # logging.basicConfig( level=logging.WARNING )

@@ -244,5 +244,10 @@ class SqliteOpertion(BaseOpertion):
         sql_cmd = 'create table %s(%s);' % (bm.__table__, ','.join(fields))
         return sql_cmd
 
-
+    @classmethod
+    def deleteOne(cls, bm, *args, **kwargs):
+        # SQLite不支持LIMIT子句,只能另辟蹊径
+        obj = bm.find().find().where(*args, **kwargs).one()
+        obj.delete()
+        return ""
 
