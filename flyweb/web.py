@@ -80,9 +80,7 @@ class Hasfly:
             passthrough_errors=False,
             ssl_context=None,
             ):
-        # print(self.baseRoute.mainURL)
-        # print(self.baseRoute.defaultURL)
-        # print(self.baseRoute.staticDir)
+        print(self.baseRoute.mainURL)
 
         app = Flyweb(self.baseRoute)
         run_simple(hostname, port, app, use_reloader,use_debugger,
