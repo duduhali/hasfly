@@ -49,12 +49,10 @@ for one in result:
 # User.updateAll({'age':22})
 # User.updateAll({'age':22},name='yang',age=50)
 
-#SQLite从版本3.6.4开始支持UPDATE/DELETE使用LIMIT子句
-# 可以使用宏SQLITE_ENABLE_UPDATE_DELETE_LIMIT进行编译控制, 然后才能使用 updateOne
 # import sqlite3
 # print(sqlite3.sqlite_version)  查看SQLite版本  py3.6 SQLite是3.14.2
 
-# User.updateOne({'age':50},'or',name='yang',age=[22,23])
+# User.updateOne({'age':50},'or',name='dudu',age=[22,23])
 # User.updateOne({'age':22},'or',['>','age',22],name='yang')
 # User.deleteAll(name='yang',age=50)
 # User.deleteOne('or',['>','age',22],name='yang')

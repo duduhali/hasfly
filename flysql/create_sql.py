@@ -244,6 +244,17 @@ class SqliteOpertion(BaseOpertion):
         sql_cmd = 'create table %s(%s);' % (bm.__table__, ','.join(fields))
         return sql_cmd
 
+    # SQLite从版本3.6.4开始支持UPDATE/DELETE使用LIMIT子句
+    # 可以使用宏SQLITE_ENABLE_UPDATE_DELETE_LIMIT进行编译控制, 这里 updateOne,和deleteOne采用变相操作
+    @classmethod
+    def updateOne(cls, bm, mappings, *args, **kwargs):
+        # SQLite不支持LIMIT子句,只能另辟蹊径
+        obj = bm.find().find().where(*args, **kwargs).one()
+        for k,v in mappings.items():
+            obj[k] = v
+        obj.update()
+        return ""
+
     @classmethod
     def deleteOne(cls, bm, *args, **kwargs):
         # SQLite不支持LIMIT子句,只能另辟蹊径
