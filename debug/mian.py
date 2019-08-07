@@ -1,7 +1,7 @@
 from flyweb.web import Hasfly
 from flyweb.render import *
 # from admin import admin
-
+from werkzeug.wrappers import Request
 app = Hasfly(__name__)
 # app.register_blueprint(admin)
 
@@ -10,6 +10,8 @@ def index(request):
     # print(request.path)
     # print(request.method)
     # print(request.remote_addr)
+    # print(request.args.get('name', 'World!')) #http://127.0.0.1:5000?name=yang output:yang
+    # values 包含args和form;  request.files文件(enctype="multipart/form-data")
     return Response('首页 Hi')
 
 @app.route('/user/id/<name>/<id:float>')

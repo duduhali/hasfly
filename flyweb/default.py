@@ -18,5 +18,4 @@ def default500(request):
 defaultURL = {'40x':defaultMethodErr, '404': default404, '401': default401, '500':default500}
 staticDir = []
 from flyweb import route
-# baseRoute = route.BaseRoute(defaultURL,staticDir)
 baseRoute = route.TreeRoute(defaultURL,staticDir)

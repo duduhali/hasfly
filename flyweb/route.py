@@ -10,18 +10,13 @@ def getPathList(path):
 
 #用字符串储路由信息
 class BaseRoute(object):
-    def __init__(self, defaultURL,staticDir):
-        self.mainURL = {}
-        self.defaultURL = defaultURL
-        self.staticDir = staticDir
-
-    # 添加路由对应的处理函数,致命弊端：用字符串做键，无法区分GET和POST方法
+    # 添加路由对应的处理函数, 需要由子类实现
     def addRoute(self, path, method, func):
-        self.mainURL[getBasePath(path)] = [func, method]
+        pass
 
     # 批量添加带前缀的路由函数
     def addPrefixRoute(self, url_prefix, arr):
-        prefix = getBasePath(url_prefix) # 前缀
+        prefix = getBasePath(url_prefix)  # 前缀
         for path, method, func in arr:
             self.addRoute('%s/%s' % (prefix, getBasePath(path)), method, func)
 
@@ -33,54 +28,9 @@ class BaseRoute(object):
     def addStatic(self, path):
         self.staticDir.append(getBasePath(path))
 
-    # 根据请求的路径和方法获取处理函数
+    # 根据请求的路径和方法获取处理函数, 需要由子类实现
     def getResponse(self, request):
-        url_path = getBasePath(request.path)
-        url_path = url_path.strip(url_suffix) #去掉路由的扩展名，如 /user/2.html=>/user/2
-        method = request.method
-        try:
-            url_list = url_path.split('/')
-            url_list_lenght = len(url_list)
-            for one in self.mainURL.keys():
-                one_list = one.split('/')
-                i = 0
-                parm_dict = dict()
-                tag_url_list = []
-                while len(one_list)>i and i<url_list_lenght:
-                    item = one_list[i]
-                    tag_url_list.append(item)
-                    if item != url_list[i]:
-                        if item.startswith('<') and item.endswith('>'):
-                            name_and_type = item[1:-1].split(':')
-                            if len(name_and_type)==1:
-                                parm_dict[name_and_type[0]] = url_list[i]
-                            else:
-                                the_type = name_and_type[1]
-                                the_data = url_list[i]
-                                if the_type == 'int':
-                                    the_data = int(the_data)
-                                elif the_type == 'float':
-                                    the_data = float(the_data)
-                                parm_dict[name_and_type[0]] = the_data
-                        else:
-                            break
-                    i = i+1
-                if i==url_list_lenght:
-                    tag_fun,methods = self.mainURL.get('/'.join(tag_url_list))
-                    if len(methods) == 0 or method in methods:
-                        if len(parm_dict)>0:
-                            return tag_fun(request,**parm_dict)
-                        else:
-                            return tag_fun(request) #路径中不包含参数
-            if len(self.staticDir) != 0:  # 最后考虑是静态资源的情况
-                for onePath in self.staticDir:
-                    # 根据开头的字母，判断是不是请求的静态资源
-                    if url_path.startswith(onePath):
-                        return dispatch_static(url_path)
-        except Exception as e:
-            print(__name__, 'e.__str__():', e.__str__())
-            return self.defaultURL['500'](request)
-        return self.defaultURL['404'](request)
+        pass
 
 #表示路由节点的类型
 @unique
@@ -134,33 +84,12 @@ class TreeRoute(BaseRoute):
     def __findNode(self,parent_node,url_part,method):
         tag_node = None
         for one_node in parent_node.children:
-            #查找条件：节点中的字段相等或者节点类型被参数
+            #查找条件：节点中的字段相等或者节点类型被参数 且method符合
             if (one_node.node_type == NodeType.Param or url_part == one_node.path) and \
                 (len(one_node.method) ==0 or method in one_node.method):
                 tag_node = one_node
                 break
         return tag_node
-
-    # 添加路由对应的处理函数,已经存在的不会覆盖
-    def addRoute(self, path, method, func):
-        path_list = getPathList(path)
-        exist_node = self.mainURL
-        i = 0
-        while i<len(path_list):
-            result_node = self.__findNodeForInsert(exist_node, path_list[i],method)
-            if result_node == None:
-                break
-            exist_node = result_node
-            i = i+1
-        while i<len(path_list): #处理不存在的路由，已经存在的路径不执行这里的代码
-            new_node = self.__createNode(path_list[i], method, func)
-            exist_node.children.append(new_node)
-            exist_node = new_node
-            i = i+1
-
-    # 批量添加带前缀的路由函数
-    def addPrefixRoute(self, url_prefix, arr):
-        pass
 
     def __getResponse(self,path_list,method,request):
         path_list_lenght = len(path_list)
@@ -188,7 +117,26 @@ class TreeRoute(BaseRoute):
                 return exist_node.fun(request)
             elif exist_node.node_type == NodeType.Param:
                 return exist_node.fun(request,**param_dict)
-    # 根据请求的路径和方法获取处理函数
+
+    # 重载方法，添加路由对应的处理函数,已经存在的不会覆盖
+    def addRoute(self, path, method, func):
+        path_list = getPathList(path)
+        exist_node = self.mainURL
+        i = 0
+        while i<len(path_list):
+            result_node = self.__findNodeForInsert(exist_node, path_list[i],method)
+            if result_node == None:
+                break
+            exist_node = result_node
+            i = i+1
+        while i<len(path_list): #处理不存在的路由，已经存在的路径不执行这里的代码
+            new_node = self.__createNode(path_list[i], method, func)
+            exist_node.children.append(new_node)
+            exist_node = new_node
+            i = i+1
+
+
+    # 重载方法，根据请求的路径和方法获取处理函数
     def getResponse(self, request):
         url_path = getBasePath(request.path)
         url_path = url_path.strip(url_suffix)  # 去掉路由的扩展名，如 /user/2.html=>/user/2
