@@ -1,3 +1,4 @@
+
 class Metatype(type):
     def __call__(self,*args,**kwargs):
         print('Metatype:',*args)
