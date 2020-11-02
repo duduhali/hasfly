@@ -3,7 +3,7 @@ import importlib
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request
 from hasweb.route import base_route
-from hasweb.default import appDir,ActionPrefix,ControllerDir,ControllerSuffix,ActionsMethod,defaultMethod, \
+from hasweb.default import appName,ActionPrefix,ControllerDir,ControllerSuffix,ActionsMethod,defaultMethod, \
     userFilter,FilterDir,FilterSuffix,BeforeAction,AfterAction
 
 def loadController():
@@ -14,7 +14,7 @@ def loadController():
         if one_file.endswith('%s.py'%ControllerSuffix):
             use_filter = userFilter
             controller_name = one_file[0:-file_suffix_lenght]
-            python_file_module = importlib.import_module('%s.%s%s' % (ControllerDir,controller_name, ControllerSuffix))
+            python_file_module = importlib.import_module('%s.%s.%s%s' % (appName,ControllerDir,controller_name, ControllerSuffix))
             controller_path = controller_name.lower()  # 路径统一用小写存储
 
 
@@ -61,7 +61,7 @@ def initFilter():
     for one_file in os.listdir(tag_dir):  # 遍历处理目录下的文件
         if one_file.endswith('%s.py' % FilterSuffix):
             filter_name = one_file[0:-file_suffix_lenght]
-            python_file_module = importlib.import_module('%s.%s%s' % (FilterDir, filter_name, FilterSuffix))
+            python_file_module = importlib.import_module('%s.%s.%s%s' % (appName,FilterDir, filter_name, FilterSuffix))
             _name = filter_name.lower()
             before_action_fun, after_action_fun = None, None
             for k in dir(python_file_module):  #处理所有过滤器
@@ -116,7 +116,7 @@ class WebService:
             passthrough_errors=False,
             ssl_context=None,
             ):
-        os.chdir(appDir)
+        os.chdir("../%s"%appName)
         web = Web()
 
         if use_debugger:

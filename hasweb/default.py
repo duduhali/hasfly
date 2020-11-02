@@ -1,7 +1,7 @@
 from werkzeug.wrappers import Response
 
 #以后移到工程目录
-appDir = '../hasDemo'          #项目目录,相对于run文件
+appName = 'hasDemo'          #项目目录
 defaultController = 'main'  #默认控制器 ,
 # 默认控制器的默认动作是首页，访问默认控制器的其它动作时不能省略控制器名，这样会认为是其它控制器的默认动作
 
