@@ -1,6 +1,6 @@
 from flyweb.web import Hasfly
 from flyweb.render import render_template,redirect
-from Model.book import Book
+from demo.Model.book import Book
 app = Hasfly(__name__)
 
 @app.route('/detail')
